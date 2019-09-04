@@ -1,0 +1,6 @@
+#Files
+*.ini
+
+#Directories
+debug
+Classes/__pycache__
