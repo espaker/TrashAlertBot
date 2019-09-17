@@ -1,24 +1,31 @@
 # -*- coding: utf-8 -*-
 
 import smtplib
-import sys
 
-try:
-    smtp = smtplib.SMTP('localhost', 25)
-    smtp.ehlo()
 
-    sender = ''
-    receiver = ''
-    frm = 'From: <{}>'.format(sender)
-    to = 'To: <{}>'.format(receiver)
-    subject = 'Subject: '
-    msg = ''
+class Mail:
 
-    smtp.sendmail(sender, receiver, '{}\n{}\n{}\n{}'.format(frm, to, subject, msg))
-    smtp.quit()
-except Exception as e:
-    print("Error[{}]".format(e))
-    sys.exit(1)
+    def __init__(self, host, port, security, username, password):
+        self.smtp = smtplib.SMTP(host, port)
+        self.security = security
+        self.username = username
+        if self.security:
+            self.smtp.starttls()
+            self.smtp.login(username, password)
+        else:
+            self.smtp.ehlo()
 
-print('Enviado')
-sys.exit(0)
+    def send_mail(self, subject, msg, receiver, sender=None):
+        if self.security and sender:
+            sender = self.username
+        else:
+            sender = 'john@doe.com'
+        frm = 'From: <{}>'.format(sender)
+        to = 'To: <{}>'.format(receiver)
+
+
+
+        self.smtp.sendmail(sender, receiver, '{}\n{}\nSubject: {}\n{}'.format(frm, to, subject, msg))
+
+    def end_connection(self):
+        smtp.quit()

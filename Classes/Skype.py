@@ -10,3 +10,6 @@ class Skype:
 
     def get_user(self):
         return self.sk.user
+
+    def get_contact(self):
+        return self.sk.contacts["Id": "espaker666"]

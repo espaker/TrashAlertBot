@@ -30,6 +30,8 @@ import sys
 import logging
 import signal
 import threading
+import time
+import pprint
 
 from logging.handlers import RotatingFileHandler
 from flask import Flask, request, Response, send_file
@@ -38,23 +40,20 @@ from flask_cors import CORS
 from Classes.Utils import Utils
 from Classes.Skype import Skype
 from Classes.Parser import Parser
+from Classes.Mail import Mail
+from Classes.RequestFormater import RequestFormatter
 
 app_version = '1.0.1'
 app = Flask(__name__)
 CORS(app)
 
+mail = None
+skype = None
 
-class RequestFormatter(logging.Formatter):
-    def format(self, record):
-        try:
-            record.method = request.method
-            record.url = request.url
-            record.remote_addr = request.remote_addr
-        except RuntimeError:
-            record.method = '-'
-            record.url = '-'
-            record.remote_addr = '-'
-        return super().format(record)
+def monitoring():
+    print("Loop inicio")
+    time.sleep(5)
+    print("Loop fim")
 
 def initiate():
     log_main.info('Iniciando o TrashAlertBot versão: {}'.format(app_version))
@@ -62,13 +61,29 @@ def initiate():
     signal.signal(signal.SIGTERM, finalize)
     signal.signal(signal.SIGINT, finalize)
 
+    global mail, skype
+
     try:
         usr = conf.get('Skype', 'User', fallback='')
         pwd = conf.get('Skype', 'Pass', fallback='')
         skype = Skype(usr, pwd)
-        print(skype.get_user())
+        pprint(skype.get_contact())
     except Exception as e:
         log_main.exception('Erro ao inicializar conexão com o Skype: {}'.format(e))
+        
+
+    try:
+        usr = conf.get('Mail', 'User', fallback='')
+        pwd = conf.get('Mail', 'Pass', fallback='')
+        host = conf.get('Mail', 'host', fallback='') 
+        port = conf.getint('Mail', 'port', fallback='')
+        security = conf.get('Mail', 'security', fallback='')
+        mail = Mail(host, port, security, usr, pwd)
+    except Exception as e:
+        log_main.exception('Erro ao inicializar instanciar e-mail: {}'.format(e))
+        
+    # x = threading.Thread(target=monitoring)
+    # x.start() 
         
 def finalize(signum, desc):
     global execute, server
